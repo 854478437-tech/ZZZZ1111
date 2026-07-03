@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenVid AI - 云端满血版大模型</title>
+    <!-- 引入 Supabase 客户端 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --card-bg: #12121e;
+            --border: #2a2a3e;
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --gold: #f59e0b;
+            --text: #e8edf5;
+            --sub: #94a3b8;
+            --success: #4ade80;
+            --radius: 18px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(ellipse at 30% 20%, rgba(139,92,246,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 80%, rgba(245,158,11,0.06) 0%, transparent 60%);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .navbar {
+            width: 100%; max-width: 1200px;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 28px; margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px); background: rgba(10,10,18,0.85);
+            position: sticky; top: 0; z-index: 100; border-radius: 0 0 24px 24px;
+        }
+        .logo {
+            font-size: 24px; font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .badge {
+            padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            background: var(--card-bg); border: 1px solid var(--border); color: var(--sub);
+        }
+        .badge.premium { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.12); }
+        .btn {
+            padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 13px;
+            cursor: pointer; border: none; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary-light); background: rgba(139,92,246,0.1); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; }
+        .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 700; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+        .main-container { width: 100%; max-width: 1200px; padding: 0 20px 50px; display: flex; flex-direction: column; gap: 40px; }
+
+        .hero { text-align: center; padding: 50px 0 30px; }
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 56px); font-weight: 800;
+            background: linear-gradient(135deg, #c084fc, #8b5cf6, #fcd34d);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .hero .subtitle { font-size: 20px; color: var(--sub); }
+        .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 20px; }
+        .stat-number { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 14px; color: var(--sub); }
+
+        .gallery {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
+        }
+        .gallery-item {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            overflow: hidden; transition: 0.3s;
+        }
+        .gallery-item:hover { transform: translateY(-4px); border-color: var(--primary); }
+        .gallery-item img, .gallery-item video { width: 100%; display: block; object-fit: cover; height: 220px; }
+        .gallery-caption { padding: 12px 16px; font-size: 14px; color: var(--sub); background: rgba(0,0,0,0.3); }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .tabs { display: flex; gap: 6px; margin-bottom: 22px; background: var(--bg); border-radius: 14px; padding: 4px; border: 1px solid var(--border); }
+        .tab {
+            flex: 1; text-align: center; padding: 10px; border-radius: 12px;
+            font-weight: 600; font-size: 14px; cursor: pointer; color: var(--sub); transition: 0.2s;
+        }
+        .tab.active { background: var(--primary); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 6px; }
+        textarea, input[type="file"] {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 14px; color: var(--text); font-size: 15px; outline: none;
+        }
+        textarea:focus { border-color: var(--primary); }
+        input[type="file"] { padding: 12px; }
+        input[type="file"]::file-selector-button {
+            background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; margin-right: 12px;
+        }
+        .generate-btn { width: 100%; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 700; margin-top: 8px; }
+
+        .status-box, .result-box {
+            display: none; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center;
+        }
+        .status-box.active, .result-box.active { display: block; }
+        .spinner {
+            width: 40px; height: 40px; margin: 0 auto 14px; border: 3px solid var(--border);
+            border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .progress-wrap { background: var(--bg); border-radius: 20px; height: 8px; overflow: hidden; margin: 12px 0; }
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--primary-light)); border-radius: 20px; transition: width 0.3s; }
+        .result-img { max-width: 100%; border-radius: 12px; margin: 12px 0; }
+        .download-link { display: inline-block; padding: 12px 28px; background: var(--primary); color: white; border-radius: 12px; text-decoration: none; font-weight: 700; margin-top: 12px; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px); z-index: 200; justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 28px; width: 90%; max-width: 400px; position: relative;
+        }
+        .close-btn { position: absolute; top: 12px; right: 18px; background: none; border: none; color: var(--sub); font-size: 24px; cursor: pointer; }
+        .modal h3 { margin-bottom: 20px; }
+        .modal input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); margin-bottom: 14px; }
+        .plan-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .plan-card {
+            background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+        }
+        .plan-card.selected { border-color: var(--gold); }
+        .plan-price { font-weight: 700; font-size: 20px; color: var(--gold); }
+        @media (max-width: 640px) {
+            .navbar { flex-wrap: wrap; gap: 10px; }
+            .hero-stats { gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">GenVid AI</div>
+    <div class="nav-right" id="navRight"></div>
+</nav>
+
+<div class="main-container">
+    <div class="hero">
+        <h1>云端满血版大模型</h1>
+        <p class="subtitle">满足您的每一个幻想</p>
+        <div class="hero-stats">
+            <div><div class="stat-number">200万+</div><div class="stat-label">生成作品</div></div>
+            <div><div class="stat-number">50万+</div><div class="stat-label">活跃创作者</div></div>
+            <div><div class="stat-number">99.7%</div><div class="stat-label">满意度</div></div>
+        </div>
+    </div>
+
+    <div class="gallery">
+        <div class="gallery-item">
+            <video autoplay loop muted playsinline>
+                <source src="https://cdn.pixabay.com/video/2023/08/13/175828-854849058_large.mp4" type="video/mp4">
+            </video>
+            <div class="gallery-caption">🎬 图生视频 · 星河流动</div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://picsum.photos/400/250?random=10" alt="AI 图片">
+            <div class="gallery-caption">🖼️ 文生图 · 未来都市</div>
+        </div>
+        <div class="gallery-item">
+            <video autoplay loop muted playsinline>
+                <source src="https://cdn.pixabay.com/video/2022/10/19/135525-765287410_large.mp4" type="video/mp4">
+            </video>
+            <div class="gallery-caption">🎥 图生视频 · 海岸日落</div>
+        </div>
+        <div class="gallery-item">
+            <img src="https://picsum.photos/400/250?random=20" alt="AI 图片">
+            <div class="gallery-caption">🎨 图生图 · 印象派重绘</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" data-tab="text2img">🖼️ 文生图 (120积分)</div>
+            <div class="tab" data-tab="img2img">🎨 图生图 (160积分)</div>
+            <div class="tab" data-tab="text2video">🎬 图生视频 (1200积分)</div>
+        </div>
+
+        <div class="tab-content active" id="text2img">
+            <div class="form-group"><label>描述你想要的画面</label><textarea id="t2i-prompt" rows="3" placeholder="例如：赛博朋克城市夜景，霓虹雨夜，4K"></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('text2img')">✨ 生成图片 (120积分)</button>
+        </div>
+        <div class="tab-content" id="img2img">
+            <div class="form-group"><label>上传参考图片</label><input type="file" id="i2i-file" accept="image/*"></div>
+            <div class="form-group"><label>描述修改方向</label><textarea id="i2i-prompt" rows="2" placeholder="例如：改成水墨画风格"></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('img2img')">✨ 生成图片 (160积分)</button>
+        </div>
+        <div class="tab-content" id="text2video">
+            <div class="form-group"><label>上传起始图片（可选）</label><input type="file" id="t2v-file" accept="image/*"></div>
+            <div class="form-group"><label>描述视频动态</label><textarea id="t2v-prompt" rows="2" placeholder="例如：宇宙飞船缓慢起飞，火焰闪烁"></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('text2video')">✨ 生成视频 (1200积分)</button>
+        </div>
+
+        <div class="status-box" id="statusBox">
+            <div class="spinner"></div>
+            <div id="statusText">正在解析提示词...</div>
+            <div class="progress-wrap"><div class="progress-fill" id="progressFill"></div></div>
+            <div id="progressPercent" style="font-size:13px; color:var(--sub);">0%</div>
+        </div>
+        <div class="result-box" id="resultBox">
+            <div style="font-size:24px;">✅</div>
+            <div style="font-weight:700; color:var(--success);">生成成功！</div>
+            <img id="resultImage" class="result-img" src="" style="display:none;">
+            <video id="resultVideo" controls style="max-width:100%; border-radius:12px; display:none; margin:12px 0;" src=""></video>
+            <br><a href="#" class="download-link" id="downloadLink" target="_blank">📥 下载作品</a>
+        </div>
+    </div>
+</div>
+
+<!-- 登录/注册弹窗 -->
+<div class="modal-overlay" id="authModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('authModal')">&times;</button>
+        <h3 id="authTitle">登录</h3>
+        <input type="email" id="authEmail" placeholder="邮箱地址">
+        <input type="password" id="authPassword" placeholder="密码">
+        <button class="btn btn-primary" id="authSubmitBtn" style="width:100%;">登录</button>
+        <p style="text-align:center; margin-top:14px; font-size:13px; color:var(--sub);">
+            <span id="authToggleText">没有账号？</span> <a href="#" id="authToggleLink" style="color:var(--primary-light);">立即注册</a>
+        </p>
+    </div>
+</div>
+
+<!-- 会员弹窗（暂用原本地积分逻辑，可后续对接支付） -->
+<div class="modal-overlay" id="memberModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('memberModal')">&times;</button>
+        <h3>🔥 开通会员</h3>
+        <p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p>
+    </div>
+</div>
+
+<!-- 积分充值弹窗（暂未对接支付） -->
+<div class="modal-overlay" id="rechargeModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeModal('rechargeModal')">&times;</button>
+        <h3>⚡ 充值积分</h3>
+        <p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p>
+    </div>
+</div>
+
+<script>
+    // ==================== 初始化 Supabase ====================
+    const SUPABASE_URL = 'https://bzeyydwvbowjjyqerjws.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXl5ZHd2Ym93amp5cWVyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjczMzksImV4cCI6MjA5ODY0MzMzOX0.7KUkg3VTFzEJcZaH4dmDDms5Ge2_Gme2-AB5MIYzIsY';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==================== 全局状态 ====================
+    let currentUser = null;
+    let userProfile = null; // 包含 points, membership
+
+    // ==================== 导航栏更新 ====================
+    async function updateNav() {
+        const navRight = document.getElementById('navRight');
+        const { data: { user } } = await supabase.auth.getUser();
+        currentUser = user;
+
+        if (!user) {
+            navRight.innerHTML = `
+                <button class="btn btn-outline" onclick="openAuth('login')">登录</button>
+                <button class="btn btn-primary" onclick="openAuth('register')">注册</button>
+            `;
+            return;
+        }
+
+        // 获取用户 profile
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+        userProfile = profile;
+
+        const isMember = profile.membership !== 'free';
+        const memberName = isMember ? profile.membership : '免费用户';
+        const badgeClass = isMember ? 'premium' : '';
+
+        let html = `<span class="badge ${badgeClass}">💰 ${profile.points} 积分</span>
+                    <span class="badge ${badgeClass}">👤 ${memberName}</span>`;
+        if (!isMember) {
+            html += `<button class="btn btn-gold btn-sm" onclick="openMember()">开通会员</button>`;
+        } else {
+            html += `<button class="btn btn-gold btn-sm" onclick="openRecharge()">充值积分</button>
+                     <button class="btn btn-outline btn-sm" onclick="openMember()">续费/升级</button>`;
+        }
+        html += `<button class="btn btn-outline btn-sm" onclick="logout()">退出</button>`;
+        navRight.innerHTML = html;
+    }
+
+    async function logout() {
+        await supabase.auth.signOut();
+        currentUser = null;
+        userProfile = null;
+        updateNav();
+        alert('已退出登录');
+    }
+
+    // ==================== 登录/注册弹窗 ====================
+    let authMode = 'login';
+    function openAuth(mode) {
+        authMode = mode;
+        document.getElementById('authTitle').textContent = mode === 'login' ? '登录' : '注册';
+        document.getElementById('authSubmitBtn').textContent = mode === 'login' ? '登录' : '注册';
+        document.getElementById('authToggleText').textContent = mode === 'login' ? '没有账号？' : '已有账号？';
+        document.getElementById('authToggleLink').textContent = mode === 'login' ? '立即注册' : '去登录';
+        document.getElementById('authModal').classList.add('active');
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    document.getElementById('authToggleLink').addEventListener('click', e => {
+        e.preventDefault();
+        openAuth(authMode === 'login' ? 'register' : 'login');
+    });
+
+    document.getElementById('authSubmitBtn').addEventListener('click', async () => {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value.trim();
+        if (!email || !password) return alert('请填写完整');
+
+        if (authMode === 'login') {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) return alert('登录失败：' + error.message);
+            alert('登录成功！');
+        } else {
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) return alert('注册失败：' + error.message);
+            alert('注册成功！已自动登录，赠送200积分已到账');
+        }
+        closeModal('authModal');
+        updateNav();
+    });
+
+    // ==================== 会员/充值弹窗（占位） ====================
+    function openMember() {
+        if (!currentUser) return alert('请先登录');
+        document.getElementById('memberModal').classList.add('active');
+    }
+    function openRecharge() {
+        if (!currentUser) return alert('请先登录');
+        document.getElementById('rechargeModal').classList.add('active');
+    }
+
+    // 点击遮罩关闭
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+    });
+
+    // ==================== 标签切换 ====================
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.dataset.tab).classList.add('active');
+            document.getElementById('statusBox').classList.remove('active');
+            document.getElementById('resultBox').classList.remove('active');
+        });
+    });
+
+    // ==================== 生成逻辑 ====================
+    const COST = { text2img: 120, img2img: 160, text2video: 1200 };
+
+    async function generate(mode) {
+        if (!currentUser) return alert('请先登录');
+        // 重新获取最新积分
+        const { data: freshProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+        userProfile = freshProfile;
+
+        if (freshProfile.points < COST[mode]) {
+            alert(`积分不足 (需要${COST[mode]}，当前${freshProfile.points})`);
+            return;
+        }
+
+        // 简单校验
+        if (mode === 'text2img' && !document.getElementById('t2i-prompt').value.trim()) return alert('请输入图片描述'); 
+        if (mode === 'img2img' && !document.getElementById('i2i-file').files.length) return alert('请上传参考图片');
+        if (mode === 'text2video' && !document.getElementById('t2v-prompt').value.trim()) return alert('请输入视频描述');
+
+        // 调用后端接口扣积分并创建订单
+        const promptText = document.getElementById(mode === 'text2img' ? 't2i-prompt' : (mode === 'img2img' ? 'i2i-prompt' : 't2v-prompt')).value;
+        const res = await fetch('/api/submit-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session.access_token}` },
+            body: JSON.stringify({ mode, prompt: promptText })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            return alert('下单失败：' + err.error);
+        }
+
+        // 成功扣减后，本地更新积分显示
+        const result = await res.json();
+        userProfile.points = result.remainingPoints;
+        updateNav();
+
+        // 显示生成动画
+        const statusBox = document.getElementById('statusBox');
+        const resultBox = document.getElementById('resultBox');
+        const fill = document.getElementById('progressFill');
+        const stext = document.getElementById('statusText');
+        const pct = document.getElementById('progressPercent');
+        statusBox.classList.add('active'); resultBox.classList.remove('active');
+        fill.style.width = '0%'; pct.textContent = '0%'; stext.textContent = '解析提示词...';
+
+        const steps = [
+            { p:15, t:'提取特征中...', d:600 },
+            { p:40, t:'AI 大模型计算...', d:1500 },
+            { p:75, t:'渲染细节...', d:2500 },
+            { p:95, t:'最终优化...', d:3200 },
+            { p:100, t:'完成', d:4000 }
+        ];
+        steps.forEach(s => setTimeout(() => { fill.style.width = s.p+'%'; pct.textContent = s.p+'%'; stext.textContent = s.t; }, s.d));
+
+        setTimeout(() => {
+            statusBox.classList.remove('active'); resultBox.classList.add('active');
+            const img = document.getElementById('resultImage');
+            const vid = document.getElementById('resultVideo');
+            const link = document.getElementById('downloadLink');
+            img.style.display = 'none'; vid.style.display = 'none';
+            if (mode === 'text2video') {
+                vid.style.display = 'block';
+                vid.src = 'https://cdn.pixabay.com/video/2022/10/19/135525-765287410_large.mp4';
+                link.href = vid.src;
+            } else {
+                img.style.display = 'block';
+                img.src = 'https://picsum.photos/600/400?random=' + Math.random();
+                link.href = img.src;
+            }
+        }, 4500);
+    }
+
+    // ==================== 页面启动 ====================
+    updateNav();
+</script>
+</body>
+</html>
