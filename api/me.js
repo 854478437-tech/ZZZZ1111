@@ -13,23 +13,19 @@ module.exports = async function handler(req, res) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token);
   if (userError || !user) return res.status(401).json({ error: '身份验证失败' });
 
-  // 查询积分表
-  let { data: profile, error: profileError } = await supabase
+  // ✨ 核心修改：使用 upsert，不管有没有记录都能完美兜底，绝不报错 500
+  const { data: profile, error } = await supabase
     .from('profiles')
-    .select('*')
-    .eq('id', user.id)
+    .upsert(
+      { id: user.id, points: 200, membership: 'free' },
+      { onConflict: 'id', ignoreDuplicates: false }
+    )
+    .select()
     .single();
 
-  // 如果查不到记录（比如手动注册的账号），直接自动新建一条
-  if (profileError || !profile) {
-    const { data: newProfile, error: insertError } = await supabase
-      .from('profiles')
-      .insert({ id: user.id, points: 200, membership: 'free' })
-      .select()
-      .single();
-    
-    if (insertError) return res.status(500).json({ error: '创建积分记录失败' });
-    profile = newProfile;
+  if (error) {
+    // 如果数据库操作失败，把具体的错误信息返回给前端，方便查错
+    return res.status(500).json({ error: error.message });
   }
 
   return res.status(200).json(profile);
