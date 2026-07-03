@@ -15,6 +15,7 @@
             --text: #e8edf5;
             --sub: #94a3b8;
             --success: #4ade80;
+            --danger: #ef4444; /* 新增红色，用于余额不足警告 */
             --radius: 18px;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,8 +46,12 @@
         .badge {
             padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
             background: var(--card-bg); border: 1px solid var(--border); color: var(--sub);
+            transition: 0.3s; /* 新增过渡动画 */
         }
         .badge.premium { border-color: var(--gold); color: var(--gold); background: rgba(245,158,11,0.12); }
+        /* 新增：余额不足时的红光闪烁动画 */
+        .badge.pulse { transform: scale(1.1); border-color: var(--danger); color: var(--danger); box-shadow: 0 0 15px rgba(239,68,68,0.4); }
+        
         .btn {
             padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 13px;
             cursor: pointer; border: none; transition: 0.2s;
@@ -72,29 +77,36 @@
         .stat-number { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, var(--primary-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-label { font-size: 14px; color: var(--sub); }
 
+        /* 💡 微调了画廊的间距和悬浮效果，让展示图更高级 */
         .gallery {
             display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
         }
         .gallery-item {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
-            overflow: hidden; transition: 0.3s;
+            overflow: hidden; transition: 0.3s; position: relative;
         }
-        .gallery-item:hover { transform: translateY(-4px); border-color: var(--primary); }
+        .gallery-item:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(139,92,246,0.2); }
         .gallery-item img, .gallery-item video { width: 100%; display: block; object-fit: cover; height: 220px; }
-        .gallery-caption { padding: 12px 16px; font-size: 14px; color: var(--sub); background: rgba(0,0,0,0.3); }
+        .gallery-caption { padding: 12px 16px; font-size: 14px; color: var(--sub); background: rgba(10,10,18,0.85); position: absolute; bottom: 0; width: 100%; font-weight: 600;}
 
         .card {
             background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius);
             padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
-        .tabs { display: flex; gap: 6px; margin-bottom: 22px; background: var(--bg); border-radius: 14px; padding: 4px; border: 1px solid var(--border); }
+        .tabs { display: flex; gap: 6px; margin-bottom: 22px; background: var(--bg); border-radius: 14px; padding: 4px; border: 1px solid var(--border); flex-wrap: wrap; }
         .tab {
-            flex: 1; text-align: center; padding: 10px; border-radius: 12px;
+            flex: 1; text-align: center; padding: 10px; border-radius: 12px; min-width: 120px;
             font-weight: 600; font-size: 14px; cursor: pointer; color: var(--sub); transition: 0.2s;
         }
         .tab.active { background: var(--primary); color: white; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        /* 💡 新增历史记录网格样式 */
+        .history-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 16px; }
+        .history-card { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .history-card img, .history-card video { width: 100%; height: 160px; object-fit: cover; background: #000; }
+        .history-prompt { font-size: 12px; color: var(--sub); padding: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-top: 1px solid var(--border); }
 
         .form-group { margin-bottom: 18px; }
         label { display: block; font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 6px; }
@@ -151,7 +163,7 @@
 <div class="main-container">
     <div class="hero">
         <h1>云端满血版大模型</h1>
-        <p class="subtitle">满足您的每一个幻想</p>
+        <p class="subtitle">IMAX级电影质感，重塑你的每一个疯狂幻想</p>
         <div class="hero-stats">
             <div><div class="stat-number">200万+</div><div class="stat-label">生成作品</div></div>
             <div><div class="stat-number">50万+</div><div class="stat-label">活跃创作者</div></div>
@@ -159,26 +171,25 @@
         </div>
     </div>
 
+    <!-- 💡 替换了更具视觉冲击力的占位图库 -->
     <div class="gallery">
         <div class="gallery-item">
             <video autoplay loop muted playsinline>
                 <source src="https://cdn.pixabay.com/video/2023/08/13/175828-854849058_large.mp4" type="video/mp4">
             </video>
-            <div class="gallery-caption">🎬 图生视频 · 星河流动</div>
+            <div class="gallery-caption">🎬 图生视频 · 宏大场景构建</div>
         </div>
         <div class="gallery-item">
-            <img src="https://picsum.photos/400/250?random=10" alt="AI 图片">
-            <div class="gallery-caption">🖼️ 文生图 · 未来都市</div>
+            <img src="https://images.unsplash.com/photo-1605806616949-1e87b487cb2a?q=80&w=800&auto=format&fit=crop" alt="中式都市奇幻">
+            <div class="gallery-caption">🖼️ 文生图 · 中式都市奇幻</div>
         </div>
         <div class="gallery-item">
-            <video autoplay loop muted playsinline>
-                <source src="https://cdn.pixabay.com/video/2022/10/19/135525-765287410_large.mp4" type="video/mp4">
-            </video>
-            <div class="gallery-caption">🎥 图生视频 · 海岸日落</div>
+            <img src="https://images.unsplash.com/photo-1534367610401-9f5ed68180aa?q=80&w=800&auto=format&fit=crop" alt="极致纹理">
+            <div class="gallery-caption">🎨 图生图 · 极高细节人物质感</div>
         </div>
         <div class="gallery-item">
-            <img src="https://picsum.photos/400/250?random=20" alt="AI 图片">
-            <div class="gallery-caption">🎨 图生图 · 印象派重绘</div>
+            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop" alt="亚文化风格">
+            <div class="gallery-caption">✨ 风格定制 · 拒绝人工塑料感</div>
         </div>
     </div>
 
@@ -187,21 +198,31 @@
             <div class="tab active" data-tab="text2img">🖼️ 文生图 (120积分)</div>
             <div class="tab" data-tab="img2img">🎨 图生图 (160积分)</div>
             <div class="tab" data-tab="text2video">🎬 图生视频 (1200积分)</div>
+            <!-- 💡 新增：历史记录标签卡 -->
+            <div class="tab" data-tab="history-tab" onclick="loadHistory()">📂 我的历史记录</div>
         </div>
 
         <div class="tab-content active" id="text2img">
-            <div class="form-group"><label>描述你想要的画面</label><textarea id="t2i-prompt" rows="3" placeholder="例如：赛博朋克城市夜景，霓虹雨夜，4K"></textarea></div>
-            <button class="btn btn-primary generate-btn" onclick="generate('text2img')">✨ 生成图片 (120积分)</button>
+            <div class="form-group"><label>描述你想要的画面</label><textarea id="t2i-prompt" rows="3" placeholder="例如：中式现代都市街道，超自然气息弥漫，IMAX级画质，超高细节..."></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('text2img')">✨ 生成图片 (消耗 120 积分)</button>
         </div>
         <div class="tab-content" id="img2img">
             <div class="form-group"><label>上传参考图片</label><input type="file" id="i2i-file" accept="image/*"></div>
-            <div class="form-group"><label>描述修改方向</label><textarea id="i2i-prompt" rows="2" placeholder="例如：改成水墨画风格"></textarea></div>
-            <button class="btn btn-primary generate-btn" onclick="generate('img2img')">✨ 生成图片 (160积分)</button>
+            <div class="form-group"><label>描述修改方向</label><textarea id="i2i-prompt" rows="2" placeholder="例如：提升材质真实感，增加民俗悬疑光影氛围"></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('img2img')">✨ 生成图片 (消耗 160 积分)</button>
         </div>
         <div class="tab-content" id="text2video">
             <div class="form-group"><label>上传起始图片（可选）</label><input type="file" id="t2v-file" accept="image/*"></div>
-            <div class="form-group"><label>描述视频动态</label><textarea id="t2v-prompt" rows="2" placeholder="例如：宇宙飞船缓慢起飞，火焰闪烁"></textarea></div>
-            <button class="btn btn-primary generate-btn" onclick="generate('text2video')">✨ 生成视频 (1200积分)</button>
+            <div class="form-group"><label>描述视频动态</label><textarea id="t2v-prompt" rows="2" placeholder="例如：运镜缓慢推进，火焰与烟雾特效闪烁"></textarea></div>
+            <button class="btn btn-primary generate-btn" onclick="generate('text2video')">✨ 生成视频 (消耗 1200 积分)</button>
+        </div>
+
+        <!-- 💡 新增：历史记录的内容区 -->
+        <div class="tab-content" id="history-tab">
+            <p id="history-status" style="font-size: 14px; color: var(--sub);">正在调取您的云端档案...</p>
+            <div class="history-grid" id="history-container">
+                <!-- 历史数据会渲染到这里 -->
+            </div>
         </div>
 
         <div class="status-box" id="statusBox">
@@ -215,7 +236,7 @@
             <div style="font-weight:700; color:var(--success);">生成成功！</div>
             <img id="resultImage" class="result-img" src="" style="display:none;">
             <video id="resultVideo" controls style="max-width:100%; border-radius:12px; display:none; margin:12px 0;" src=""></video>
-            <br><a href="#" class="download-link" id="downloadLink" target="_blank">📥 下载作品</a>
+            <br><a href="#" class="download-link" id="downloadLink" target="_blank">📥 下载原作品</a>
         </div>
     </div>
 </div>
@@ -234,50 +255,27 @@
     </div>
 </div>
 
-<!-- 会员弹窗（占位） -->
-<div class="modal-overlay" id="memberModal">
-    <div class="modal">
-        <button class="close-btn" onclick="closeModal('memberModal')">&times;</button>
-        <h3>🔥 开通会员</h3>
-        <p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p>
-    </div>
-</div>
-
-<!-- 充值弹窗（占位） -->
-<div class="modal-overlay" id="rechargeModal">
-    <div class="modal">
-        <button class="close-btn" onclick="closeModal('rechargeModal')">&times;</button>
-        <h3>⚡ 充值积分</h3>
-        <p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p>
-    </div>
-</div>
+<!-- 会员/充值弹窗 -->
+<div class="modal-overlay" id="memberModal"><div class="modal"><button class="close-btn" onclick="closeModal('memberModal')">&times;</button><h3>🔥 开通会员</h3><p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p></div></div>
+<div class="modal-overlay" id="rechargeModal"><div class="modal"><button class="close-btn" onclick="closeModal('rechargeModal')">&times;</button><h3>⚡ 充值积分</h3><p style="color:var(--sub); margin-bottom:16px;">即将上线，敬请期待</p></div></div>
 
 <script>
-    // ========== 你的 Supabase 信息（替换成你自己的） ==========
-    const BASE_URL = 'https://bzeyydwvbowjjyqerjws.supabase.co'; // 你的 Project URL
-    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXl5ZHd2Ym93amp5cWVyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjczMzksImV4cCI6MjA5ODY0MzMzOX0.7KUkg3VTFzEJcZaH4dmDDms5Ge2_Gme2-AB5MIYzIsY'; // 你的 anon public key
-
-    // ========== 状态 ==========
+    const BASE_URL = 'https://bzeyydwvbowjjyqerjws.supabase.co';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXl5ZHd2Ym93amp5cWVyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjczMzksImV4cCI6MjA5ODY0MzMzOX0.7KUkg3VTFzEJcZaH4dmDDms5Ge2_Gme2-AB5MIYzIsY';
+    
     let currentToken = null;
+    let userPoints = 0; // 💡 新增：全局追踪积分，实现前端秒扣
 
-    // 初始化：检查是否已登录
     async function init() {
         const token = localStorage.getItem('auth_token');
         if (token) {
-            // 验证 token 是否还有效
-            const res = await fetch('/api/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                currentToken = token;
-            } else {
-                localStorage.removeItem('auth_token');
-            }
+            const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) currentToken = token;
+            else localStorage.removeItem('auth_token');
         }
         updateNav();
     }
 
-    // 导航栏更新
     async function updateNav() {
         const nav = document.getElementById('navRight');
         if (!currentToken) {
@@ -287,96 +285,49 @@
             `;
             return;
         }
-        const res = await fetch('/api/me', {
-            headers: { 'Authorization': `Bearer ${currentToken}` }
-        });
-        if (!res.ok) {
-            currentToken = null;
-            localStorage.removeItem('auth_token');
-            updateNav();
-            return;
-        }
+        const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${currentToken}` } });
+        if (!res.ok) { logout(); return; }
+        
         const profile = await res.json();
+        userPoints = profile.points; // 💡 每次获取信息，同步最新积分
         const isMember = profile.membership !== 'free';
         const memberName = isMember ? profile.membership : '免费用户';
         const badgeClass = isMember ? 'premium' : '';
-        let html = `<span class="badge ${badgeClass}">💰 ${profile.points} 积分</span>
+        
+        // 💡 重点：给积分 badge 加上 id="pointsBadge"，方便后续做动画和秒更新
+        let html = `<span class="badge ${badgeClass}" id="pointsBadge">💰 ${userPoints} 积分</span>
                     <span class="badge ${badgeClass}">👤 ${memberName}</span>`;
-        if (!isMember) {
-            html += `<button class="btn btn-gold btn-sm" onclick="openMember()">开通会员</button>`;
-        } else {
-            html += `<button class="btn btn-gold btn-sm" onclick="openRecharge()">充值积分</button>
-                     <button class="btn btn-outline btn-sm" onclick="openMember()">续费/升级</button>`;
-        }
+        if (!isMember) html += `<button class="btn btn-gold btn-sm" onclick="openMember()">开通会员</button>`;
+        else html += `<button class="btn btn-gold btn-sm" onclick="openRecharge()">充值积分</button> <button class="btn btn-outline btn-sm" onclick="openMember()">续费/升级</button>`;
         html += `<button class="btn btn-outline btn-sm" onclick="logout()">退出</button>`;
         nav.innerHTML = html;
     }
 
-    function logout() {
-        currentToken = null;
-        localStorage.removeItem('auth_token');
-        updateNav();
-        alert('已退出登录');
-    }
+    function logout() { currentToken = null; localStorage.removeItem('auth_token'); updateNav(); alert('已退出登录'); }
 
-    // ========== 登录/注册弹窗 ==========
+    // 登录注册部分原样保留
     let authMode = 'login';
-    function openAuth(mode) {
-        authMode = mode;
-        document.getElementById('authTitle').textContent = mode === 'login' ? '登录' : '注册';
-        document.getElementById('authSubmitBtn').textContent = mode === 'login' ? '登录' : '注册';
-        document.getElementById('authToggleText').textContent = mode === 'login' ? '没有账号？' : '已有账号？';
-        document.getElementById('authToggleLink').textContent = mode === 'login' ? '立即注册' : '去登录';
-        document.getElementById('authModal').classList.add('active');
-        document.getElementById('authEmail').value = '';
-        document.getElementById('authPassword').value = '';
-    }
+    function openAuth(mode) { authMode = mode; document.getElementById('authTitle').textContent = mode === 'login' ? '登录' : '注册'; document.getElementById('authSubmitBtn').textContent = mode === 'login' ? '登录' : '注册'; document.getElementById('authToggleText').textContent = mode === 'login' ? '没有账号？' : '已有账号？'; document.getElementById('authToggleLink').textContent = mode === 'login' ? '立即注册' : '去登录'; document.getElementById('authModal').classList.add('active'); document.getElementById('authEmail').value = ''; document.getElementById('authPassword').value = ''; }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
-
-    document.getElementById('authToggleLink').addEventListener('click', e => {
-        e.preventDefault();
-        openAuth(authMode === 'login' ? 'register' : 'login');
-    });
-
+    document.getElementById('authToggleLink').addEventListener('click', e => { e.preventDefault(); openAuth(authMode === 'login' ? 'register' : 'login'); });
+    
     document.getElementById('authSubmitBtn').addEventListener('click', async () => {
         const email = document.getElementById('authEmail').value.trim();
         const password = document.getElementById('authPassword').value.trim();
         if (!email || !password) return alert('请填写完整');
         const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
-        const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+        const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
         if (!res.ok) return alert('操作失败：' + data.error);
-        if (authMode === 'login') {
-            currentToken = data.token;
-            localStorage.setItem('auth_token', data.token);
-            alert('登录成功！');
-        } else {
-            alert('注册成功！已自动登录，赠送200积分已到账');
-            currentToken = data.token;
-            localStorage.setItem('auth_token', data.token);
-        }
-        closeModal('authModal');
-        updateNav();
+        currentToken = data.token; localStorage.setItem('auth_token', data.token);
+        alert(authMode === 'login' ? '登录成功！' : '注册成功！已自动登录，赠送200积分已到账');
+        closeModal('authModal'); updateNav();
     });
 
-    // ========== 会员/充值占位 ==========
-    function openMember() {
-        if (!currentToken) return alert('请先登录');
-        document.getElementById('memberModal').classList.add('active');
-    }
-    function openRecharge() {
-        if (!currentToken) return alert('请先登录');
-        document.getElementById('rechargeModal').classList.add('active');
-    }
-    document.querySelectorAll('.modal-overlay').forEach(o => {
-        o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
-    });
+    function openMember() { if(!currentToken) return alert('请先登录'); document.getElementById('memberModal').classList.add('active'); }
+    function openRecharge() { if(!currentToken) return alert('请先登录'); document.getElementById('rechargeModal').classList.add('active'); }
+    document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); }); });
 
-    // ========== 标签切换 ==========
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function() {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -388,56 +339,59 @@
         });
     });
 
-    // ========== 生成 ==========
     const COST = { text2img: 120, img2img: 160, text2video: 1200 };
-        async function generate(mode) {
+    
+    // ========== 💡 核心修改：生成、拦截与扣费逻辑 ==========
+    async function generate(mode) {
         if (!currentToken) return alert('请先登录');
-        if (mode === 'text2img' && !document.getElementById('t2i-prompt').value.trim()) return alert('请输入图片描述');
-        if (mode === 'img2img' && !document.getElementById('i2i-file').files.length) return alert('请上传参考图片');
-        if (mode === 'text2video' && !document.getElementById('t2v-prompt').value.trim()) return alert('请输入视频描述');
+        const cost = COST[mode];
 
-        const promptText = document.getElementById(mode === 'text2img' ? 't2i-prompt' : (mode === 'img2img' ? 'i2i-prompt' : 't2v-prompt')).value;
-        
-        // 1. 提交订单到后台（扣积分）
+        // 🛑 第一层拦截：前端算账。如果钱不够，报警并闪烁红灯！
+        if (userPoints < cost) {
+            const badge = document.getElementById('pointsBadge');
+            badge.classList.add('pulse'); // 开启红光闪烁动画
+            setTimeout(() => badge.classList.remove('pulse'), 600); // 0.6秒后恢复
+            return alert(`余额不足 😭！本次生成需要消耗 ${cost} 积分，您当前仅剩 ${userPoints} 积分。请充值。`);
+        }
+
+        const promptInput = document.getElementById(mode === 'text2img' ? 't2i-prompt' : (mode === 'img2img' ? 'i2i-prompt' : 't2v-prompt'));
+        if (!promptInput.value.trim()) return alert('请输入您想要的画面描述');
+
+        // 提交订单
         const res = await fetch('/api/submit-order', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentToken}`
-            },
-            body: JSON.stringify({ mode, prompt: promptText })
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentToken}` },
+            body: JSON.stringify({ mode, prompt: promptInput.value.trim() })
         });
-        if (!res.ok) {
-            const err = await res.json();
-            return alert('提交失败：' + err.error);
-        }
+        
         const result = await res.json();
-        updateNav(); // 更新积分显示
+        if (!res.ok) return alert('排单失败：' + result.error);
 
-        // 2. 显示“制作中”的等待状态（不弹出假图片）
+        // 💰 订单提交成功，无需刷新网页，直接在右上角秒扣积分，给用户即时反馈！
+        if (result.remaining_points !== undefined) {
+            userPoints = result.remaining_points;
+            document.getElementById('pointsBadge').innerText = `💰 ${userPoints} 积分`;
+        }
+
         const statusBox = document.getElementById('statusBox');
         const resultBox = document.getElementById('resultBox');
-        statusBox.classList.add('active');
-        resultBox.classList.remove('active');
+        statusBox.classList.add('active'); resultBox.classList.remove('active');
         
-        document.getElementById('statusText').innerText = '🔄 您的订单已提交，正在排队制作中，请耐心等待...';
+        document.getElementById('statusText').innerText = '🔄 订单已分配至高端算力节点，正在全力渲染中...';
         document.getElementById('progressFill').style.width = '100%';
         document.getElementById('progressPercent').innerText = '排单中';
 
-       // 3. 开启定时轮询，每 5 秒去后台查一次是否做好了
+        // 轮询逻辑完全保留你之前跑通的代码！
         const interval = setInterval(async () => {
-        const checkRes = await fetch('/api/check-order?t=' + new Date().getTime(), {
+            const checkRes = await fetch('/api/check-order?t=' + new Date().getTime(), {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
             const data = await checkRes.json();
 
-            // 💡 关键修复 1：同时兼容图片和视频的字段名
             const finalUrl = data.image_url || data.video_url;
 
-            // 💡 关键修复 2：判断 finalUrl 是否存在，而不是 result_url
             if (data.status === 'completed' && finalUrl) {
-                clearInterval(interval); // 停止轮询
-                
+                clearInterval(interval); 
                 statusBox.classList.remove('active');
                 resultBox.classList.add('active');
 
@@ -446,7 +400,6 @@
                 const link = document.getElementById('downloadLink');
                 img.style.display = 'none'; vid.style.display = 'none';
 
-                // 💡 关键修复 3：根据数据库传回来的类型显示
                 if (data.video_url || finalUrl.endsWith('.mp4')) {
                     vid.style.display = 'block';
                     vid.src = finalUrl;
@@ -458,10 +411,56 @@
                 }
                 document.getElementById('statusText').innerText = '✅ 制作完成！';
             }
-        }, 5000); // 5000毫秒 = 5秒查一次
+        }, 5000); 
     }
 
-    // ⚠️ 这行最关键的启动代码我已经帮你加上了！
+    // ========== 💡 新增功能：加载历史记录 ==========
+    async function loadHistory() {
+        if (!currentToken) {
+            document.getElementById('history-status').innerText = '请先登录以查看历史档案。';
+            return;
+        }
+        
+        document.getElementById('history-status').innerText = '正在调取您的云端档案...';
+        const res = await fetch('/api/history?t=' + new Date().getTime(), {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        
+        if (!res.ok) {
+            document.getElementById('history-status').innerText = '获取失败，请稍后再试。';
+            return;
+        }
+        
+        const orders = await res.json();
+        const container = document.getElementById('history-container');
+        container.innerHTML = ''; 
+        
+        if (orders.length === 0) {
+            document.getElementById('history-status').innerText = '您还没有生成过任何作品，快去尝试一下吧！';
+            return;
+        }
+        
+        document.getElementById('history-status').innerText = `已为您找到 ${orders.length} 条生成记录。`;
+        
+        orders.forEach(order => {
+            const finalUrl = order.image_url || order.video_url;
+            if (!finalUrl) return; 
+
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            
+            let mediaHtml = (order.video_url || finalUrl.endsWith('.mp4')) 
+                ? `<video src="${finalUrl}" controls></video>` 
+                : `<img src="${finalUrl}" alt="历史作品">`;
+            
+            card.innerHTML = `
+                ${mediaHtml}
+                <div class="history-prompt">📝 ${order.prompt || '未命名指令'}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
     init();
 </script>
 </body>
