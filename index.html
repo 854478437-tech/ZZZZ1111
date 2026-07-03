@@ -424,15 +424,18 @@
         document.getElementById('progressFill').style.width = '100%';
         document.getElementById('progressPercent').innerText = '排单中';
 
-        // 3. 开启定时轮询，每 5 秒去后台查一次是否做好了
+       // 3. 开启定时轮询，每 5 秒去后台查一次是否做好了
         const interval = setInterval(async () => {
             const checkRes = await fetch('/api/check-order', {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
             const data = await checkRes.json();
 
-            // 如果数据库里状态变成 completed，说明做好了！
-            if (data.status === 'completed' && data.result_url) {
+            // 💡 关键修复 1：同时兼容图片和视频的字段名
+            const finalUrl = data.image_url || data.video_url;
+
+            // 💡 关键修复 2：判断 finalUrl 是否存在，而不是 result_url
+            if (data.status === 'completed' && finalUrl) {
                 clearInterval(interval); // 停止轮询
                 
                 statusBox.classList.remove('active');
@@ -443,15 +446,15 @@
                 const link = document.getElementById('downloadLink');
                 img.style.display = 'none'; vid.style.display = 'none';
 
-               // 根据图片URL后缀判断是图片还是视频
-                if (data.result_url.endsWith('.mp4')) {
+                // 💡 关键修复 3：根据数据库传回来的类型显示
+                if (data.video_url || finalUrl.endsWith('.mp4')) {
                     vid.style.display = 'block';
-                    vid.src = data.result_url;
-                    link.href = data.result_url;
+                    vid.src = finalUrl;
+                    link.href = finalUrl;
                 } else {
                     img.style.display = 'block';
-                    img.src = data.result_url;
-                    link.href = data.result_url;
+                    img.src = finalUrl;
+                    link.href = finalUrl;
                 }
                 document.getElementById('statusText').innerText = '✅ 制作完成！';
             }
