@@ -426,7 +426,7 @@
 
        // 3. 开启定时轮询，每 5 秒去后台查一次是否做好了
         const interval = setInterval(async () => {
-            const checkRes = await fetch('/api/check-order', {
+        const checkRes = await fetch('/api/check-order?t=' + new Date().getTime(), {
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
             const data = await checkRes.json();
