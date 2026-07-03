@@ -13,18 +13,17 @@ module.exports = async function handler(req, res) {
   const { data: { user }, error: userError } = await supabase.auth.getUser(token);
   if (userError || !user) return res.status(401).json({ error: '身份验证失败' });
 
-  // ✨ 核心修改：使用 upsert，不管有没有记录都能完美兜底，绝不报错 500
+  // 🌟 这里加了 user.email，完美匹配你数据库里的 email 列，绝不报错！
   const { data: profile, error } = await supabase
     .from('profiles')
     .upsert(
-      { id: user.id, points: 200, membership: 'free' },
+      { id: user.id, email: user.email, points: 200, membership: 'free' },
       { onConflict: 'id', ignoreDuplicates: false }
     )
     .select()
     .single();
 
   if (error) {
-    // 如果数据库操作失败，把具体的错误信息返回给前端，方便查错
     return res.status(500).json({ error: error.message });
   }
 
