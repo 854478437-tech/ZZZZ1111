@@ -390,13 +390,15 @@
 
     // ========== 生成 ==========
     const COST = { text2img: 120, img2img: 160, text2video: 1200 };
-    async function generate(mode) {
+        async function generate(mode) {
         if (!currentToken) return alert('请先登录');
         if (mode === 'text2img' && !document.getElementById('t2i-prompt').value.trim()) return alert('请输入图片描述');
         if (mode === 'img2img' && !document.getElementById('i2i-file').files.length) return alert('请上传参考图片');
         if (mode === 'text2video' && !document.getElementById('t2v-prompt').value.trim()) return alert('请输入视频描述');
 
         const promptText = document.getElementById(mode === 'text2img' ? 't2i-prompt' : (mode === 'img2img' ? 'i2i-prompt' : 't2v-prompt')).value;
+        
+        // 1. 提交订单到后台（扣积分）
         const res = await fetch('/api/submit-order', {
             method: 'POST',
             headers: {
@@ -410,47 +412,48 @@
             return alert('提交失败：' + err.error);
         }
         const result = await res.json();
-        // 更新积分显示（从接口返回）
-        updateNav();
+        updateNav(); // 更新积分显示
 
-        // 模拟生成动画
+        // 2. 显示“制作中”的等待状态（不弹出假图片）
         const statusBox = document.getElementById('statusBox');
         const resultBox = document.getElementById('resultBox');
-        const fill = document.getElementById('progressFill');
-        const stext = document.getElementById('statusText');
-        const pct = document.getElementById('progressPercent');
-        statusBox.classList.add('active'); resultBox.classList.remove('active');
-        fill.style.width = '0%'; pct.textContent = '0%'; stext.textContent = '解析提示词...';
+        statusBox.classList.add('active');
+        resultBox.classList.remove('active');
+        
+        document.getElementById('statusText').innerText = '🔄 您的订单已提交，正在排队制作中，请耐心等待...';
+        document.getElementById('progressFill').style.width = '100%';
+        document.getElementById('progressPercent').innerText = '排单中';
 
-        const steps = [
-            { p:15, t:'提取特征中...', d:600 },
-            { p:40, t:'AI 大模型计算...', d:1500 },
-            { p:75, t:'渲染细节...', d:2500 },
-            { p:95, t:'最终优化...', d:3200 },
-            { p:100, t:'完成', d:4000 }
-        ];
-        steps.forEach(s => setTimeout(() => { fill.style.width = s.p+'%'; pct.textContent = s.p+'%'; stext.textContent = s.t; }, s.d));
+        // 3. 开启定时轮询，每 5 秒去后台查一次是否做好了
+        const interval = setInterval(async () => {
+            const checkRes = await fetch('/api/check-order', {
+                headers: { 'Authorization': `Bearer ${currentToken}` }
+            });
+            const data = await checkRes.json();
 
-        setTimeout(() => {
-            statusBox.classList.remove('active'); resultBox.classList.add('active');
-            const img = document.getElementById('resultImage');
-            const vid = document.getElementById('resultVideo');
-            const link = document.getElementById('downloadLink');
-            img.style.display = 'none'; vid.style.display = 'none';
-            if (mode === 'text2video') {
-                vid.style.display = 'block';
-                vid.src = 'https://cdn.pixabay.com/video/2022/10/19/135525-765287410_large.mp4';
-                link.href = vid.src;
-            } else {
-                img.style.display = 'block';
-                img.src = 'https://picsum.photos/600/400?random=' + Math.random();
-                link.href = img.src;
+            // 如果数据库里状态变成 completed，说明做好了！
+            if (data.status === 'completed' && data.result_url) {
+                clearInterval(interval); // 停止轮询
+                
+                statusBox.classList.remove('active');
+                resultBox.classList.add('active');
+
+                const img = document.getElementById('resultImage');
+                const vid = document.getElementById('resultVideo');
+                const link = document.getElementById('downloadLink');
+                img.style.display = 'none'; vid.style.display = 'none';
+
+                // 根据图片URL后缀判断是图片还是视频
+                if (data.result_url.endsWith('.mp4')) {
+                    vid.style.display = 'block';
+                    vid.src = data.result_url;
+                    link.href = data.result_url;
+                } else {
+                    img.style.display = 'block';
+                    img.src = data.result_url;
+                    link.href = data.result_url;
+                }
+                document.getElementById('statusText').innerText = '✅ 制作完成！';
             }
-        }, 4500);
+        }, 5000); // 5000毫秒 = 5秒查一次
     }
-
-    // 页面启动
-    init();
-</script>
-</body>
-</html>
