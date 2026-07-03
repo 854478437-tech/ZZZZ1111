@@ -443,7 +443,7 @@
                 const link = document.getElementById('downloadLink');
                 img.style.display = 'none'; vid.style.display = 'none';
 
-                // 根据图片URL后缀判断是图片还是视频
+               // 根据图片URL后缀判断是图片还是视频
                 if (data.result_url.endsWith('.mp4')) {
                     vid.style.display = 'block';
                     vid.src = data.result_url;
@@ -457,3 +457,9 @@
             }
         }, 5000); // 5000毫秒 = 5秒查一次
     }
+
+    // ⚠️ 这行最关键的启动代码我已经帮你加上了！
+    init();
+</script>
+</body>
+</html>
