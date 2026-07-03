@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GenVid AI - 云端满血版大模型</title>
-    <!-- 引入 Supabase 客户端 -->
-   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         :root {
             --bg: #0a0a12;
@@ -137,13 +135,6 @@
         .close-btn { position: absolute; top: 12px; right: 18px; background: none; border: none; color: var(--sub); font-size: 24px; cursor: pointer; }
         .modal h3 { margin-bottom: 20px; }
         .modal input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); margin-bottom: 14px; }
-        .plan-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
-        .plan-card {
-            background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 16px;
-            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
-        }
-        .plan-card.selected { border-color: var(--gold); }
-        .plan-price { font-weight: 700; font-size: 20px; color: var(--gold); }
         @media (max-width: 640px) {
             .navbar { flex-wrap: wrap; gap: 10px; }
             .hero-stats { gap: 24px; }
@@ -243,7 +234,7 @@
     </div>
 </div>
 
-<!-- 会员弹窗（暂用原本地积分逻辑，可后续对接支付） -->
+<!-- 会员弹窗（占位） -->
 <div class="modal-overlay" id="memberModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('memberModal')">&times;</button>
@@ -252,7 +243,7 @@
     </div>
 </div>
 
-<!-- 积分充值弹窗（暂未对接支付） -->
+<!-- 充值弹窗（占位） -->
 <div class="modal-overlay" id="rechargeModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('rechargeModal')">&times;</button>
@@ -262,41 +253,53 @@
 </div>
 
 <script>
-    // ==================== 初始化 Supabase ====================
-    const SUPABASE_URL = 'https://bzeyydwvbowjjyqerjws.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXl5ZHd2Ym93amp5cWVyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjczMzksImV4cCI6MjA5ODY0MzMzOX0.7KUkg3VTFzEJcZaH4dmDDms5Ge2_Gme2-AB5MIYzIsY';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // ========== 你的 Supabase 信息（替换成你自己的） ==========
+    const BASE_URL = 'https://bzeyydwvbowjjyqerjws.supabase.co'; // 你的 Project URL
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXl5ZHd2Ym93amp5cWVyandzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjczMzksImV4cCI6MjA5ODY0MzMzOX0.7KUkg3VTFzEJcZaH4dmDDms5Ge2_Gme2-AB5MIYzIsY'; // 你的 anon public key
 
-    // ==================== 全局状态 ====================
-    let currentUser = null;
-    let userProfile = null; // 包含 points, membership
+    // ========== 状态 ==========
+    let currentToken = null;
 
-    // ==================== 导航栏更新 ====================
+    // 初始化：检查是否已登录
+    async function init() {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+            // 验证 token 是否还有效
+            const res = await fetch('/api/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                currentToken = token;
+            } else {
+                localStorage.removeItem('auth_token');
+            }
+        }
+        updateNav();
+    }
+
+    // 导航栏更新
     async function updateNav() {
-        const navRight = document.getElementById('navRight');
-        const { data: { user } } = await supabase.auth.getUser();
-        currentUser = user;
-
-        if (!user) {
-            navRight.innerHTML = `
+        const nav = document.getElementById('navRight');
+        if (!currentToken) {
+            nav.innerHTML = `
                 <button class="btn btn-outline" onclick="openAuth('login')">登录</button>
                 <button class="btn btn-primary" onclick="openAuth('register')">注册</button>
             `;
             return;
         }
-
-        // 获取用户 profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-        userProfile = profile;
-
+        const res = await fetch('/api/me', {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        if (!res.ok) {
+            currentToken = null;
+            localStorage.removeItem('auth_token');
+            updateNav();
+            return;
+        }
+        const profile = await res.json();
         const isMember = profile.membership !== 'free';
         const memberName = isMember ? profile.membership : '免费用户';
         const badgeClass = isMember ? 'premium' : '';
-
         let html = `<span class="badge ${badgeClass}">💰 ${profile.points} 积分</span>
                     <span class="badge ${badgeClass}">👤 ${memberName}</span>`;
         if (!isMember) {
@@ -306,18 +309,17 @@
                      <button class="btn btn-outline btn-sm" onclick="openMember()">续费/升级</button>`;
         }
         html += `<button class="btn btn-outline btn-sm" onclick="logout()">退出</button>`;
-        navRight.innerHTML = html;
+        nav.innerHTML = html;
     }
 
-    async function logout() {
-        await supabase.auth.signOut();
-        currentUser = null;
-        userProfile = null;
+    function logout() {
+        currentToken = null;
+        localStorage.removeItem('auth_token');
         updateNav();
         alert('已退出登录');
     }
 
-    // ==================== 登录/注册弹窗 ====================
+    // ========== 登录/注册弹窗 ==========
     let authMode = 'login';
     function openAuth(mode) {
         authMode = mode;
@@ -340,36 +342,41 @@
         const email = document.getElementById('authEmail').value.trim();
         const password = document.getElementById('authPassword').value.trim();
         if (!email || !password) return alert('请填写完整');
-
+        const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert('操作失败：' + data.error);
         if (authMode === 'login') {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) return alert('登录失败：' + error.message);
+            currentToken = data.token;
+            localStorage.setItem('auth_token', data.token);
             alert('登录成功！');
         } else {
-            const { error } = await supabase.auth.signUp({ email, password });
-            if (error) return alert('注册失败：' + error.message);
             alert('注册成功！已自动登录，赠送200积分已到账');
+            currentToken = data.token;
+            localStorage.setItem('auth_token', data.token);
         }
         closeModal('authModal');
         updateNav();
     });
 
-    // ==================== 会员/充值弹窗（占位） ====================
+    // ========== 会员/充值占位 ==========
     function openMember() {
-        if (!currentUser) return alert('请先登录');
+        if (!currentToken) return alert('请先登录');
         document.getElementById('memberModal').classList.add('active');
     }
     function openRecharge() {
-        if (!currentUser) return alert('请先登录');
+        if (!currentToken) return alert('请先登录');
         document.getElementById('rechargeModal').classList.add('active');
     }
-
-    // 点击遮罩关闭
     document.querySelectorAll('.modal-overlay').forEach(o => {
         o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
     });
 
-    // ==================== 标签切换 ====================
+    // ========== 标签切换 ==========
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function() {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -381,48 +388,32 @@
         });
     });
 
-    // ==================== 生成逻辑 ====================
+    // ========== 生成 ==========
     const COST = { text2img: 120, img2img: 160, text2video: 1200 };
-
     async function generate(mode) {
-        if (!currentUser) return alert('请先登录');
-        // 重新获取最新积分
-        const { data: freshProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-        userProfile = freshProfile;
-
-        if (freshProfile.points < COST[mode]) {
-            alert(`积分不足 (需要${COST[mode]}，当前${freshProfile.points})`);
-            return;
-        }
-
-        // 简单校验
-        if (mode === 'text2img' && !document.getElementById('t2i-prompt').value.trim()) return alert('请输入图片描述'); 
+        if (!currentToken) return alert('请先登录');
+        if (mode === 'text2img' && !document.getElementById('t2i-prompt').value.trim()) return alert('请输入图片描述');
         if (mode === 'img2img' && !document.getElementById('i2i-file').files.length) return alert('请上传参考图片');
         if (mode === 'text2video' && !document.getElementById('t2v-prompt').value.trim()) return alert('请输入视频描述');
 
-        // 调用后端接口扣积分并创建订单
         const promptText = document.getElementById(mode === 'text2img' ? 't2i-prompt' : (mode === 'img2img' ? 'i2i-prompt' : 't2v-prompt')).value;
         const res = await fetch('/api/submit-order', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session.access_token}` },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentToken}`
+            },
             body: JSON.stringify({ mode, prompt: promptText })
         });
-
         if (!res.ok) {
             const err = await res.json();
-            return alert('下单失败：' + err.error);
+            return alert('提交失败：' + err.error);
         }
-
-        // 成功扣减后，本地更新积分显示
         const result = await res.json();
-        userProfile.points = result.remainingPoints;
+        // 更新积分显示（从接口返回）
         updateNav();
 
-        // 显示生成动画
+        // 模拟生成动画
         const statusBox = document.getElementById('statusBox');
         const resultBox = document.getElementById('resultBox');
         const fill = document.getElementById('progressFill');
@@ -458,8 +449,8 @@
         }, 4500);
     }
 
-    // ==================== 页面启动 ====================
-    updateNav();
+    // 页面启动
+    init();
 </script>
 </body>
 </html>
